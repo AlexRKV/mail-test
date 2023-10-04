@@ -226,5 +226,6 @@ module.exports = configure(function (ctx) {
           .use(ESLintPlugin, [{ extensions: ["js"] }]);
       },
     },
+    publicPath: "/mail-test/",
   };
 });
