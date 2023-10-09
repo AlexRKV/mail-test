@@ -52,8 +52,11 @@ export const useRootStore = defineStore("rootStore", {
         this.transitionTo(message, STATES.REMOVED);
       }
     },
+    removeFromRemoved(id) {
+      this.messages = this.messages.filter((message) => message.id !== id);
+    },
 
-    createNewMessage() {
+    createNewMessage(initialState = STATES.DRAFTS) {
       const newMessage = {
         id: String(this.messages.length + 1),
         body: "Type something... ",
@@ -61,8 +64,16 @@ export const useRootStore = defineStore("rootStore", {
         email: "somewhere@whoknows.com",
         state: STATES.DRAFTS,
       };
-      this.messages.push(newMessage);
+      this.messages.push({ ...newMessage, state: initialState });
       return newMessage;
+    },
+
+    sendAllFromDrafts(drafts) {
+      drafts.forEach((item) => {
+        if (item.state === STATES.DRAFTS) {
+          item.state = STATES.OUTBOUND;
+        }
+      });
     },
   },
 });

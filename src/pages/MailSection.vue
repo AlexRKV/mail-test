@@ -4,12 +4,28 @@
       <q-item-section>
         <q-item-label class="text-uppercase">{{ section }}</q-item-label>
       </q-item-section>
-      <q-item-section class="items-end">
+      <q-item-section>
         <q-btn
           size="sm"
           color="primary"
           label="новое письмо"
           @click="handleNewMessageClick"
+        />
+      </q-item-section>
+      <q-item-section>
+        <q-btn
+          size="sm"
+          color="primary"
+          label="все в отправленные"
+          @click="onSendAllFromDrafts"
+        />
+      </q-item-section>
+      <q-item-section>
+        <q-btn
+          size="sm"
+          color="primary"
+          label="получить входящие"
+          @click="onCheckMailbox"
         />
       </q-item-section>
     </q-item>
@@ -19,11 +35,15 @@
         <q-list v-for="message in messages" :key="message.id" bordered>
           <q-item clickable @click="handleItemClick(message.id)">
             <q-item-section>
-              <q-item-label class="text-weight-medium">{{
-                message.email
-              }}</q-item-label>
-              <q-item-label>{{ message.name }}</q-item-label>
-              <q-item-label overline>{{ message.body }}</q-item-label>
+              <q-item-label class="text-weight-medium">
+                {{ message.email }}
+              </q-item-label>
+              <q-item-label>
+                {{ message.name }}
+              </q-item-label>
+              <q-item-label overline>
+                {{ message.body }}
+              </q-item-label>
             </q-item-section>
             <div class="q-pa-md flex justify-center items-center">
               <q-btn
@@ -80,6 +100,7 @@ const props = defineProps({
 
 const router = useRouter();
 const validRoute = computed(() => validSections.includes(props.section));
+
 !validRoute.value && router.push({ path: `/${MAILBOX}/${STATES.INCOMING}` });
 
 const store = useRootStore();
@@ -91,7 +112,7 @@ const currentMessage = computed(() => store.getMessageById(props.id));
 
 const handleItemClick = async (id) => {
   try {
-    await router.push(`/${MAILBOX}/${STATES.DRAFTS}/edit/${id}`);
+    await router.push(`/${MAILBOX}/${props.section}/edit/${id}`);
   } catch (e) {
     //
   }
@@ -117,10 +138,11 @@ const openDialog = () => {
 };
 
 const closeDialog = () => {
-  router.push(`/${MAILBOX}/${STATES.DRAFTS}`).catch(() => {
+  router.push(`/${MAILBOX}/${props.section}`).catch(() => {
     //
   });
 };
+
 const handleDialogChange = (e) => {
   dialog.value = e;
 };
@@ -131,12 +153,31 @@ const handleDialogClose = ({ id, text }) => {
 };
 
 const handleRemoveMessage = (id) => {
-  store.removeMessage(id);
+  if (props.section === STATES.REMOVED) {
+    store.removeFromRemoved(id);
+  } else {
+    store.removeMessage(id);
+  }
+};
+
+const randomize = () => {
+  return store.messages[Math.floor(Math.random() * store.messages.length)];
+};
+
+const onCheckMailbox = () => {
+  const count = randomize();
+  for (let i = 0; i < count; i++) {
+    store.createNewMessage(STATES.INCOMING);
+  }
+};
+
+const onSendAllFromDrafts = () => {
+  store.sendAllFromDrafts(store.drafts.slice(0));
 };
 
 const handleNewMessageClick = () => {
   const newMessage = store.createNewMessage();
-  router.push(`/${MAILBOX}/${STATES.DRAFTS}/new/${newMessage.id}`).catch(() => {
+  router.push(`/${MAILBOX}/${props.section}/new/${newMessage.id}`).catch(() => {
     //
   });
 };
